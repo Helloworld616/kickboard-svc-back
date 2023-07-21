@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?> <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lgcns.tct.mapper.UsedataMapper">
+
+	<select id="getUseData" parameterType="String" resultType="com.lgcns.tct.dto.UsedataDto">
+        SELECT COUNT(*) AS usage_count
+     		, SUM(use_time) AS usage_minute
+     		, SUM(use_distance) AS usage_meter
+     		, round(SUM(use_distance)/1000*0.232, 1) AS carbon_reduction
+		FROM kickboard_svc.t_svc_use
+		WHERE 1=1
+		AND user_no=#{user_no} 
+		AND DATE(use_start_dt)>=#{start_dt}
+  </select>
+
+	<select id="getUsedList" parameterType="String" resultType="com.lgcns.tct.dto.UsedListDto">
+			<!-- ID는 Mapper에서 선언한 메소드명과 같아야 함 -->
+			<!-- 테이블 앞에 DB명 꼭 넣기 -->
+			<!-- 수정이 발생하면 build.gradle 활용하여 프로젝트 다시 로드 -->
+
+			<!-- 🔨🔨이곳에 코드를 작성하세요! -->
+			SELECT S.USE_NO AS USE_NO
+					, S.USE_DISTANCE AS USE_DISTANCE
+					, S.USE_TIME AS USE_TIME
+					, date_format(S.USE_START_DT, '%Y.%m.%d %h:%i') AS USE_START_DT
+					, date_format(S.USE_END_DT, '%Y.%m.%d %h:%i') AS USE_END_DT
+					, P.PAY_DATETIME AS PAY_DATETIME
+					, MAX(CASE WHEN P.PAYMETHOD_CODE = 'C' THEN P.PAY_COST END) AS CARD_PAY
+					, MAX(CASE WHEN P.PAYMETHOD_CODE = 'P' THEN P.PAY_COST END) AS POINT_PAY
+			FROM kickboard_svc.t_svc_use as S
+			JOIN kickboard_svc.t_svc_use_pay as P
+			ON S.USE_NO = P.USE_NO
+			WHERE 1=1
+			AND user_no=#{user_no} 
+			AND DATE(use_start_dt)>=#{start_dt} 
+			GROUP BY USE_NO
+			ORDER BY USE_START_DT DESC
+
+			<!-- SELECT GROUP_CONCAT(MACHINE_NO)
+			FROM kickboard_svc.t_svc_use; -->
+
+			<!-- SELECT JSON_ARRAYAGG(MACHINE_NO)
+			FROM t_svc_use -->
+			<!-- https://velog.io/@xcc629/Mysql-%EB%B0%B0%EC%97%B4%EB%A1%9C-%EB%B0%9B%EC%95%84%EC%98%A4%EA%B8%B0 -->
+
+			<!-- 페이지네이션 : https://cotak.tistory.com/112 -->
+  </select>
+	
+</mapper>
